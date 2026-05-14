@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Great Debate: Philippine Annexation</title>
+    <style>
+        :root {
+            --tr-red: #b22234;
+            --mt-blue: #3c3b6e;
+            --parchment: #fdfaf3;
+            --ink: #2c2c2c;
+            --border-style: 1px solid #dcd7c9;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background-color: #e5e5e5;
+            background-image: radial-gradient(#d1d1d1 1px, transparent 1px);
+            background-size: 20px 20px;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: var(--ink);
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: var(--parchment);
+            padding: 40px;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: var(--border-style);
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 3px double var(--ink);
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+        }
+
+        h1 { margin: 0; font-size: 2.5rem; text-transform: uppercase; letter-spacing: 3px; }
+        .subtitle { font-style: italic; color: #555; margin-top: 10px; }
+
+        .debate-area {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin-bottom: 40px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .character-row { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 10px; }
+        .character-row.reverse { flex-direction: row-reverse; }
+
+        .avatar-circle {
+            width: 70px; height: 70px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 35px; flex-shrink: 0; background: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 4px solid #ddd;
+        }
+
+        .roosevelt-avatar { border-color: var(--tr-red); }
+        .twain-avatar { border-color: var(--mt-blue); }
+        .student-avatar { border-color: #666; }
+
+        .bubble {
+            background: white; padding: 20px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: var(--border-style);
+            position: relative; flex-grow: 1;
+        }
+
+        .character-name { font-weight: 900; margin-bottom: 5px; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+        .tr-text { color: var(--tr-red); }
+        .mt-text { color: var(--mt-blue); }
+
+        .interaction-panel {
+            background: #fff; padding: 25px; border-radius: 8px;
+            border: 2px solid #2c2c2c;
+        }
+
+        textarea {
+            width: 100%; height: 80px; padding: 12px; border: 1px solid #ccc;
+            border-radius: 4px; font-family: inherit; font-size: 1rem;
+            box-sizing: border-box; margin-bottom: 15px; resize: none;
+        }
+
+        .button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .prompt-btn {
+            background: #f8f9fa; border: 1px solid #ddd; padding: 8px 12px;
+            text-align: left; font-family: inherit; font-size: 0.85rem;
+            cursor: pointer; border-radius: 4px; color: #444;
+        }
+
+        .submit-btn {
+            background: var(--ink); color: white; padding: 10px 30px;
+            border: none; border-radius: 4px; font-weight: bold; cursor: pointer;
+            float: right;
+        }
+
+        .submit-btn:disabled { background: #999; cursor: not-allowed; }
+
+        .loading-indicator {
+            display: none; font-style: italic; color: #666; margin-top: 10px;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .button-grid { grid-template-columns: 1fr; }
+            .character-row { flex-direction: column; align-items: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>The Great Debate</h1>
+        <div class="subtitle">Imperialism vs. Democracy in the Philippines (1900)</div>
+    </header>
+
+    <div id="debateArea" class="debate-area">
+        <!-- Initial Messages -->
+        <div class="character-row">
+            <div class="avatar-circle roosevelt-avatar">🥊</div>
+            <div class="bubble">
+                <span class="character-name tr-text">Theodore Roosevelt</span>
+                "Bully! I am ready to defend the expansion of our great Republic. What say you, student of the future?"
+            </div>
+        </div>
+
+        <div class="character-row reverse">
+            <div class="avatar-circle twain-avatar">🖋️</div>
+            <div class="bubble">
+                <span class="character-name mt-text">Mark Twain</span>
+                "And I am here to ensure we don't trade our soul for a handful of islands. Ask your questions, young citizen."
+            </div>
+        </div>
+    </div>
+
+    <div class="interaction-panel">
+        <textarea id="questionBox" placeholder="Ask your question..."></textarea>
+        
+        <div class="button-grid">
+            <button class="prompt-btn" onclick="setQuestion(this)">"Isn't it hypocritical to annex people without their consent?"</button>
+            <button class="prompt-btn" onclick="setQuestion(this)">"Won't another country just take the islands if we leave?"</button>
+        </div>
+
+        <div id="loading" class="loading-indicator">The gentlemen are conferring...</div>
+        <button id="submitBtn" class="submit-btn" onclick="handleAsk()">Ask the Debaters</button>
+        <div style="clear: both;"></div>
+    </div>
+</div>
+
+<script>
+    const apiKey = ""; // Environment provides the key
+
+    function setQuestion(btn) {
+        document.getElementById('questionBox').value = btn.innerText.replace(/"/g, '');
+    }
+
+    async function handleAsk() {
+        const question = document.getElementById('questionBox').value.trim();
+        const debateArea = document.getElementById('debateArea');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+
+        if (!question) return;
+
+        // 1. Add Student's Question to UI
+        appendMessage('Student (2026)', '🎓', question, 'student-avatar', true);
+        document.getElementById('questionBox').value = "";
+        
+        // 2. Prepare for API Call
+        submitBtn.disabled = true;
+        loading.style.display = 'block';
+
+        const systemPrompt = `You are simulating a debate between Theodore Roosevelt and Mark Twain. 
+        Roosevelt: Pro-imperialism, energetic, uses "Bully!", focused on national strength. 
+        Twain: Anti-imperialism, sarcastic, witty, focused on democratic values and hypocrisy.
+        Respond to the user's question. Format your response exactly like this:
+        ROOSEVELT: [His 1-2 paragraph response]
+        TWAIN: [His 1-2 paragraph response]`;
+
+        try {
+            const response = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: question }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                })
+            });
+
+            const data = await response.json();
+            const text = data.candidates[0].content.parts[0].text;
+
+            // 3. Parse and Append Responses
+            const trMatch = text.match(/ROOSEVELT:([\s\S]*?)(?=TWAIN:|$)/i);
+            const mtMatch = text.match(/TWAIN:([\s\S]*?)$/i);
+
+            if (trMatch) appendMessage('Theodore Roosevelt', '🥊', trMatch[1].trim(), 'roosevelt-avatar', false);
+            if (mtMatch) appendMessage('Mark Twain', '🖋️', mtMatch[1].trim(), 'twain-avatar', true);
+
+        } catch (error) {
+            alert("The telegraph lines seem to be down. Please try again.");
+        } finally {
+            submitBtn.disabled = false;
+            loading.style.display = 'none';
+            debateArea.scrollTop = debateArea.scrollHeight;
+        }
+    }
+
+    function appendMessage(name, icon, text, avatarClass, isReverse) {
+        const debateArea = document.getElementById('debateArea');
+        const row = document.createElement('div');
+        row.className = `character-row ${isReverse ? 'reverse' : ''}`;
+        
+        row.innerHTML = `
+            <div class="avatar-circle ${avatarClass}">${icon}</div>
+            <div class="bubble">
+                <span class="character-name ${avatarClass.includes('roosevelt') ? 'tr-text' : (avatarClass.includes('twain') ? 'mt-text' : '')}">${name}</span>
+                ${text}
+            </div>
+        `;
+        debateArea.appendChild(row);
+        debateArea.scrollTop = debateArea.scrollHeight;
+    }
+
+    async function fetchWithRetry(url, options, retries = 5, backoff = 1000) {
+        for (let i = 0; i < retries; i++) {
+            try {
+                const res = await fetch(url, options);
+                if (res.ok) return res;
+            } catch (err) {}
+            await new Promise(resolve => setTimeout(resolve, backoff));
+            backoff *= 2;
+        }
+        throw new Error('All retries failed');
+    }
+</script>
+
+</body>
+</html>
